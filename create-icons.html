@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>아이콘 생성</title></head>
+<body>
+<script>
+function createIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // 배경 원
+  ctx.fillStyle = '#4F6EF7';
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 돋보기 아이콘
+  const lw  = Math.max(1.5, size * 0.09);
+  const cx  = size * 0.41;
+  const cy  = size * 0.41;
+  const r   = size * 0.22;
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth   = lw;
+  ctx.lineCap     = 'round';
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  const angle = Math.PI * 0.75;
+  ctx.moveTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+  ctx.lineTo(size * 0.76, size * 0.76);
+  ctx.stroke();
+
+  return canvas.toDataURL('image/png');
+}
+
+window.onload = () => {
+  [16, 48, 128].forEach(size => {
+    const a = document.createElement('a');
+    a.href     = createIcon(size);
+    a.download = `icon${size}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+  document.body.innerHTML =
+    '<div style="font-family:sans-serif;padding:40px;text-align:center">' +
+    '<h2 style="color:#4F6EF7">아이콘 3개 다운로드 완료!</h2>' +
+    '<p>icon16.png · icon48.png · icon128.png 을<br>' +
+    '<strong>/Users/banshk/youtube-ai-helper/icons/</strong> 폴더에 넣으세요.</p>' +
+    '</div>';
+};
+</script>
+</body>
+</html>
