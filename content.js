@@ -226,22 +226,39 @@ function submitRequest(userRequest) {
   const pageSnapshot = getPageSnapshot();
   console.log('[ytai-content] 요청 전송:', userRequest, '스냅샷:', pageSnapshot.length, '개 요소');
 
-  chrome.runtime.sendMessage({ type: 'ANALYZE_SCREEN', userRequest, pageSnapshot }, (response) => {
-    if (chrome.runtime.lastError) {
-      console.error('[ytai-content] 오류:', chrome.runtime.lastError.message);
-      resetPanel();
-      showErrorToast('오류: ' + chrome.runtime.lastError.message);
-      return;
-    }
+  const port = chrome.runtime.connect({ name: 'ytai-analyze' });
+  let responded = false;
 
-    if (response?.type === 'ANALYSIS_RESULT') {
+  const timeout = setTimeout(() => {
+    if (!responded) {
+      port.disconnect();
+      resetPanel();
+      showErrorToast('시간 초과. 다시 시도해주세요.');
+    }
+  }, 35000);
+
+  port.onMessage.addListener((response) => {
+    responded = true;
+    clearTimeout(timeout);
+    port.disconnect();
+    if (response.type === 'ANALYSIS_RESULT') {
       hidePanel();
       showOverlay(response.result);
-    } else if (response?.type === 'ANALYSIS_ERROR') {
+    } else if (response.type === 'ANALYSIS_ERROR') {
       resetPanel();
       showErrorToast(response.error);
     }
   });
+
+  port.onDisconnect.addListener(() => {
+    clearTimeout(timeout);
+    if (!responded) {
+      resetPanel();
+      showErrorToast('연결 오류: 유튜브 탭을 새로고침 후 다시 시도해주세요.');
+    }
+  });
+
+  port.postMessage({ type: 'ANALYZE_SCREEN', userRequest, pageSnapshot });
 }
 
 // ─── Page snapshot (DOM → Claude용 요소 목록) ──────────────────────────────────
@@ -256,7 +273,8 @@ function getPageSnapshot() {
     'yt-button-shape button[aria-label]', // 새 YouTube 버튼 컴포넌트
     'a[title]',                          // 링크
     'ytd-guide-entry-renderer a',        // 사이드바 항목
-    'input#search',                      // 검색창
+    'ytd-mini-guide-entry-renderer a',  // 미니 사이드바
+    'input[name="search_query"]',        // 검색창 (헤더)
     'yt-tab-shape',                      // 탭
     '[role="tab"][aria-label]',
     'yt-subscribe-button-view-model button',
@@ -278,10 +296,12 @@ function getPageSnapshot() {
         el.getAttribute('title') ||
         el.textContent || ''
       ).trim();
-      // "(k)", "(m)", "(f)", "(3)" 같은 단축키 접미사 제거
+      // "(k)", "(m)" 또는 "키보드 단축키 k" 같은 단축키 접미사 제거
       const t = raw
+        .replace(/\s*키보드\s*단축키\s*\S+\s*$/, '')
         .replace(/\s*[\(（][a-zA-Z0-9\s]{1,3}[\)）]\s*$/, '')
         .replace(/\s+/g, ' ')
+        .trim()
         .slice(0, 50);
       if (!t) continue;
       const cx = (rect.left + rect.width / 2) / window.innerWidth;
@@ -315,9 +335,9 @@ const ELEMENT_SELECTORS = {
   theater:       '.ytp-size-button',
   next_video:    '.ytp-next-button',
   miniplayer:    '.ytp-miniplayer-button',
-  search:        'input#search',
-  like:          'like-button-view-model button, #like-button button, ytd-toggle-button-renderer[is-icon-button] button[aria-label*="좋아요"]',
-  dislike:       'dislike-button-view-model button, ytd-toggle-button-renderer[is-icon-button] button[aria-label*="싫어요"]',
+  search:        'input[name="search_query"], input#search',
+  like:          'button[aria-label*="좋아요 표시"], like-button-view-model button, ytd-toggle-button-renderer[is-icon-button] button[aria-label*="좋아요"]',
+  dislike:       'button[aria-label*="싫어요 표시"], dislike-button-view-model button, ytd-toggle-button-renderer[is-icon-button] button[aria-label*="싫어요"]',
   subscribe:     'yt-subscribe-button-view-model button, ytd-subscribe-button-renderer button',
   playlists_tab: 'yt-tab-shape[tab-title="재생목록"], tp-yt-paper-tab[aria-label="재생목록"], [tab-identifier="재생목록"]',
   save:          [
@@ -329,11 +349,11 @@ const ELEMENT_SELECTORS = {
   ].join(', '),
   share:         'button[aria-label*="공유"], yt-button-shape button[aria-label*="공유"]',
   more_actions:  'button[aria-label*="더보기"], yt-button-shape button[aria-label*="더보기"], button[aria-label*="작업 더보기"]',
-  home:           'ytd-guide-entry-renderer a[href="/"]',
-  subscriptions: 'ytd-guide-entry-renderer a[href="/feed/subscriptions"]',
-  library:       'ytd-guide-entry-renderer a[href="/feed/library"]',
-  history:       'ytd-guide-entry-renderer a[href="/feed/history"]',
-  shorts:        'ytd-guide-entry-renderer a[href="/shorts"]',
+  home:          'ytd-guide-entry-renderer a[href="/"], ytd-mini-guide-entry-renderer a[href="/"], a[href="/"][title]',
+  subscriptions: 'ytd-guide-entry-renderer a[href="/feed/subscriptions"], ytd-mini-guide-entry-renderer a[href="/feed/subscriptions"]',
+  library:       'ytd-guide-entry-renderer a[href="/feed/library"], ytd-mini-guide-entry-renderer a[href="/feed/library"]',
+  history:       'ytd-guide-entry-renderer a[href="/feed/history"], ytd-mini-guide-entry-renderer a[href="/feed/history"]',
+  shorts:        'ytd-guide-entry-renderer a[href="/shorts"], ytd-mini-guide-entry-renderer a[href="/shorts"]',
 };
 
 const TEXT_FALLBACKS = {
@@ -354,15 +374,17 @@ const TEXT_FALLBACKS = {
 
 // 한국어 YouTube 동의어 맵 (단축키 제거 후 원래 단어 → 검색어)
 const KR_SYNONYMS = {
-  '볼륨': ['음소거', '볼륨', 'mute', 'volume'],
-  '음소거': ['음소거', '볼륨', 'mute', 'volume'],
-  '재생': ['재생', '일시정지', 'play', 'pause'],
-  '일시정지': ['일시정지', '재생', 'pause', 'play'],
+  '볼륨': ['음소거', '음소거 해제', '볼륨', 'mute', 'unmute', 'volume'],
+  '음소거': ['음소거', '음소거 해제', '볼륨', 'mute', 'unmute', 'volume'],
+  '재생': ['재생', '일시중지', '일시정지', 'play', 'pause'],
+  '일시정지': ['일시중지', '일시정지', '재생', 'pause', 'play'],
+  '일시중지': ['일시중지', '일시정지', '재생', 'pause', 'play'],
   '자막': ['자막', 'subtitles', 'captions', 'cc'],
-  '전체화면': ['전체', '전체화면', 'fullscreen', 'full screen'],
-  '저장': ['저장', 'save'],
+  '전체화면': ['전체 화면', '전체화면', 'fullscreen', 'full screen'],
+  '전체 화면': ['전체 화면', '전체화면', 'fullscreen', 'full screen'],
+  '저장': ['저장', '재생목록에 저장', 'save'],
   '공유': ['공유', 'share'],
-  '좋아요': ['좋아요', 'like'],
+  '좋아요': ['좋아요', '좋아요 표시', 'like'],
   '구독': ['구독', 'subscribe'],
 };
 
@@ -385,7 +407,8 @@ function findElementByTextContent(text) {
     // 1단계: aria-label/title 정확 매치
     (el) => {
       const lbl = (el.getAttribute('aria-label') || el.getAttribute('title') || '').trim().toLowerCase()
-        .replace(/\s*[\(（][a-zA-Z0-9\s]{1,3}[\)）]\s*$/, ''); // 단축키 제거
+        .replace(/\s*키보드\s*단축키\s*\S+\s*$/, '')
+        .replace(/\s*[\(（][a-zA-Z0-9\s]{1,3}[\)）]\s*$/, '').trim();
       return keywords.some(k => lbl === k);
     },
     // 2단계: 텍스트 정확 매치
@@ -397,7 +420,8 @@ function findElementByTextContent(text) {
     (el) => {
       const all = (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '')
         .trim().toLowerCase()
-        .replace(/\s*[\(（][a-zA-Z0-9\s]{1,3}[\)）]\s*$/, '');
+        .replace(/\s*키보드\s*단축키\s*\S+\s*$/, '')
+        .replace(/\s*[\(（][a-zA-Z0-9\s]{1,3}[\)）]\s*$/, '').trim();
       return keywords.some(k => k.length >= 2 && all.includes(k) && all.length < k.length * 5);
     },
   ]) {
@@ -411,10 +435,9 @@ function findElementByTextContent(text) {
 }
 
 function findTargetElement(elementType, elementText) {
-  // 1. CSS 선택자
+  // 1. CSS 선택자 - querySelectorAll로 모든 후보 중 첫 번째 visible 반환
   if (elementType && ELEMENT_SELECTORS[elementType]) {
-    const el = document.querySelector(ELEMENT_SELECTORS[elementType]);
-    if (el) {
+    for (const el of document.querySelectorAll(ELEMENT_SELECTORS[elementType])) {
       const r = el.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) return el;
     }
@@ -633,8 +656,26 @@ function startAutoClickCountdown(elementType, elementText) {
 
 function quickAction(elementType, label) {
   hidePanel();
+
+  // 홈·구독·보관함·검색은 버튼이 안 보일 때 직접 이동
+  const NAV_URLS = {
+    home:          'https://www.youtube.com/',
+    subscriptions: 'https://www.youtube.com/feed/subscriptions',
+    library:       'https://www.youtube.com/feed/library',
+    history:       'https://www.youtube.com/feed/history',
+    shorts:        'https://www.youtube.com/shorts',
+  };
+
   const pos = getElementCenter(elementType, null);
   if (!pos) {
+    if (NAV_URLS[elementType]) {
+      window.location.href = NAV_URLS[elementType];
+      return;
+    }
+    if (elementType === 'search') {
+      const input = document.querySelector('input#search');
+      if (input) { input.focus(); input.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    }
     showErrorToast(`'${label}' 버튼을 이 화면에서 찾을 수 없어요.`);
     return;
   }

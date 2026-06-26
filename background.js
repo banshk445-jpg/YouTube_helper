@@ -13,6 +13,7 @@ async function devReloadCheck() {
 }
 devReloadCheck();
 
+// CAPTURE_TAB은 빠른 응답이라 onMessage 유지
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'CAPTURE_TAB') {
     chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 85 }, (dataUrl) => {
@@ -24,22 +25,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+});
 
-  if (message.type !== 'ANALYZE_SCREEN') return false;
+// ANALYZE_SCREEN: 포트 기반 통신 (MV3 service worker 유휴 종료로 인한 메시지 유실 방지)
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== 'ytai-analyze') return;
 
-  console.log('[ytai] 요청 수신:', message.userRequest, '스냅샷:', (message.pageSnapshot ?? []).length, '개');
+  port.onMessage.addListener(async (message) => {
+    if (message.type !== 'ANALYZE_SCREEN') return;
 
-  analyze(message.userRequest, message.pageSnapshot ?? [], sender.tab)
-    .then(result => {
+    console.log('[ytai] 요청 수신:', message.userRequest, '스냅샷:', (message.pageSnapshot ?? []).length, '개');
+
+    try {
+      const result = await analyze(message.userRequest, message.pageSnapshot ?? [], port.sender.tab);
       console.log('[ytai] 완료:', result);
-      sendResponse({ type: 'ANALYSIS_RESULT', result });
-    })
-    .catch(e => {
+      port.postMessage({ type: 'ANALYSIS_RESULT', result });
+    } catch (e) {
       console.error('[ytai] 실패:', e.message);
-      sendResponse({ type: 'ANALYSIS_ERROR', error: e.message });
-    });
-
-  return true;
+      port.postMessage({ type: 'ANALYSIS_ERROR', error: e.message });
+    }
+  });
 });
 
 async function analyze(userRequest, snapshot, tab) {
