@@ -15,8 +15,8 @@
     "storage"
   ],
   "host_permissions": [
-    "<all_urls>",
-    "http://localhost:9393/"
+    "https://www.youtube.com/*",
+    "https://youtubehelper.banshk.workers.dev/*"
   ],
   "background": {
     "service_worker": "background.js"

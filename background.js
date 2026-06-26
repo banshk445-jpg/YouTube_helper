@@ -1,17 +1,5 @@
 const WORKER_URL = 'https://youtubehelper.banshk.workers.dev';
 
-// 개발용 자동 리로드
-let _devTs = 0;
-async function devReloadCheck() {
-  try {
-    const r = await fetch('http://localhost:9393');
-    const ts = Number(await r.text());
-    if (_devTs && ts > _devTs) { chrome.runtime.reload(); return; }
-    _devTs = ts;
-  } catch {}
-  setTimeout(devReloadCheck, 1000);
-}
-devReloadCheck();
 
 // CAPTURE_TAB은 빠른 응답이라 onMessage 유지
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

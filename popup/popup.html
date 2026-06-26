@@ -14,121 +14,171 @@
       color: #333;
     }
 
-    .logo {
+    .header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 18px;
     }
 
-    .logo-icon { font-size: 32px; }
-
-    .logo-text h1 { font-size: 16px; font-weight: 800; }
-    .logo-text p  { font-size: 12px; color: #888; margin-top: 2px; }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #555;
-      margin-bottom: 7px;
-    }
-
-    input[type="password"] {
-      width: 100%;
-      padding: 11px 13px;
-      border: 2px solid #ddd;
-      border-radius: 11px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-      background: #fff;
-    }
-
-    input[type="password"]:focus { border-color: #667eea; }
-
-    .save-btn {
-      display: block;
-      width: 100%;
-      margin-top: 10px;
-      padding: 13px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      border: none;
-      border-radius: 11px;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .save-btn:hover { opacity: 0.9; }
-
-    .status {
-      display: none;
-      margin-top: 10px;
-      text-align: center;
-      font-size: 13px;
-      color: #28a745;
-      font-weight: 600;
-    }
-
-    .info-box {
-      margin-top: 16px;
-      padding: 13px 15px;
-      background: #e8f0fe;
+    .header-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #4F6EF7, #3a55d4);
       border-radius: 12px;
-      font-size: 13px;
-      color: #444;
-      line-height: 1.55;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
-    .info-box strong { color: #667eea; }
+    .header-icon svg { width: 26px; height: 26px; }
 
-    .divider {
-      height: 1px;
-      background: #e4e4e4;
-      margin: 16px 0;
-    }
+    .header-text h1 { font-size: 15px; font-weight: 800; color: #222; }
+    .header-text p  { font-size: 12px; color: #888; margin-top: 2px; }
 
-    .key-link {
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e6f4ea;
+      color: #1e7e34;
       font-size: 12px;
-      color: #888;
-      text-align: center;
-      display: block;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 20px;
+      margin-bottom: 16px;
     }
-    .key-link a { color: #667eea; text-decoration: none; }
-    .key-link a:hover { text-decoration: underline; }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: #28a745;
+      border-radius: 50%;
+      animation: blink 1.8s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .steps {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .steps-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #4F6EF7;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .step {
+      display: flex;
+      gap: 11px;
+      margin-bottom: 11px;
+      align-items: flex-start;
+    }
+
+    .step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      background: #4F6EF7;
+      color: white;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #444;
+    }
+
+    .step-text strong { color: #4F6EF7; }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .feature {
+      background: white;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #555;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .feature .feat-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #bbb;
+    }
   </style>
 </head>
 <body>
-  <div class="logo">
-    <span class="logo-icon">🤖</span>
-    <div class="logo-text">
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+      </svg>
+    </div>
+    <div class="header-text">
       <h1>유튜브 AI 도우미</h1>
-      <p>Gemini API 설정</p>
+      <p>AI가 버튼을 직접 가리켜 드려요</p>
     </div>
   </div>
 
-  <label for="api-key">Gemini API 키</label>
-  <input type="password" id="api-key" placeholder="AIza..." autocomplete="off" />
-  <button class="save-btn" id="save-btn">저장하기</button>
-  <div class="status" id="status">✓ 저장되었습니다!</div>
-
-  <div class="divider"></div>
-
-  <div class="info-box">
-    유튜브에서 화면 오른쪽 아래의
-    <strong>"도움받기 🤖"</strong> 버튼을 누르면
-    AI가 원하는 버튼을 직접 가리켜 드립니다.
+  <div class="status-badge">
+    <div class="status-dot"></div>
+    유튜브에서 사용 가능
   </div>
 
-  <div class="divider"></div>
+  <div class="steps">
+    <div class="steps-title">사용 방법</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">유튜브에서 <strong>"도움받기"</strong> 버튼을 클릭하세요</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">원하는 것을 <strong>버튼으로 선택</strong>하거나 <strong>말하거나 입력</strong>하세요</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">AI가 화면에서 <strong>해당 버튼을 직접 가리켜</strong> 드립니다</div>
+    </div>
+  </div>
 
-  <span class="key-link">
-    API 키가 없으신가요?
-    <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio에서 무료 발급받기</a>
-  </span>
+  <div class="features">
+    <div class="feature"><span class="feat-icon">⚡</span>퀵액션 9개</div>
+    <div class="feature"><span class="feat-icon">🎙</span>음성 입력</div>
+    <div class="feature"><span class="feat-icon">🔎</span>돋보기</div>
+    <div class="feature"><span class="feat-icon">👆</span>자동 클릭</div>
+  </div>
 
-  <script src="popup.js"></script>
+  <div class="footer">별도 설정 없이 바로 사용 가능합니다</div>
 </body>
 </html>
