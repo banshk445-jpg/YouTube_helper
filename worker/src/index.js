@@ -5,7 +5,9 @@
 // 모델·토큰 한도·프롬프트는 전부 여기서 고정한다.
 // => 이 엔드포인트를 훔쳐도 "유튜브 버튼 안내" 외의 용도로는 쓸 수 없다.
 
-const MODEL = 'claude-haiku-4-5-20251001';
+// Haiku보다 화면 요소 선택 정확도가 높다. 토큰 단가가 훨씬 비싸므로
+// 월 spend limit 소진 속도를 봐가며 필요하면 Haiku로 되돌릴 것.
+const MODEL = 'claude-sonnet-5';
 const MAX_TOKENS = 400;
 const MAX_REQUEST_LEN = 200;   // 사용자 요청 최대 길이
 const MAX_SNAPSHOT = 60;       // 화면 요소 최대 개수
@@ -102,8 +104,13 @@ export default {
     }
 
     const data = await res.json();
-    const steps = parseSteps(data?.content?.[0]?.text ?? '');
-    if (!steps.length) return json({ error: '응답을 이해하지 못했어요. 다시 시도해주세요.' }, 502, cors);
+    // 확장 사고(thinking) 등 텍스트가 아닌 블록이 앞에 올 수 있어 첫 text 블록을 찾는다.
+    const rawText = data?.content?.find(b => b?.type === 'text')?.text ?? '';
+    const steps = parseSteps(rawText);
+    if (!steps.length) {
+      console.error('파싱 실패. content 블록 타입:', JSON.stringify(data?.content?.map(b => b.type)), '원문:', rawText.slice(0, 500));
+      return json({ error: '응답을 이해하지 못했어요. 다시 시도해주세요.' }, 502, cors);
+    }
 
     return json({ steps }, 200, cors);
   },

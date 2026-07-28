@@ -2,14 +2,15 @@ name = "youtubehelper"
 main = "src/index.js"
 compatibility_date = "2026-07-01"
 
+# 버전별 프리뷰 URL(<version>-youtubehelper.workers.dev)도 공개 엔드포인트가 되므로 끈다.
+# [vars] 안에 넣으면 진짜 설정이 아니라 그냥 환경변수가 되어버리므로 반드시 최상위에 둘 것.
+preview_urls = false
+
 [vars]
 # 확장 프로그램 ID. 로컬 테스트 ID와 웹스토어 ID가 다르므로 쉼표로 둘 다 넣어도 된다.
 # 로그로 확인한 실제 값. 웹스토어에 게시하면 ID가 또 바뀌므로 그때 쉼표로 추가할 것.
 ALLOWED_ORIGINS = "chrome-extension://nkblggfpnfccdpanobgkhgolllgojjap"
 ENFORCE_ORIGIN = "true"
-
-# 버전별 프리뷰 URL(<version>-youtubehelper.workers.dev)도 공개 엔드포인트가 되므로 끈다.
-preview_urls = false
 
 # IP당 60초에 10회. workers.dev 도메인에는 Cloudflare WAF 룰이 안 걸리므로
 # Worker 내장 rate limit 바인딩을 쓴다. period는 10 또는 60만 허용된다.

@@ -296,12 +296,13 @@ function getPageSnapshot() {
     }
   }
 
-  // 같은 텍스트 중복 제거
-  const textSet = new Set();
+  // 같은 텍스트+영역 조합만 중복 제거 (같은 라벨이 플레이어/사이드바 등
+  // 다른 영역에 따로 있으면 서로 다른 버튼이므로 둘 다 남겨야 한다)
+  const seenKeys = new Set();
   return items.filter(e => {
-    const k = e.t.toLowerCase();
-    if (textSet.has(k)) return false;
-    textSet.add(k);
+    const k = e.t.toLowerCase() + '|' + e.area;
+    if (seenKeys.has(k)) return false;
+    seenKeys.add(k);
     return true;
   }).slice(0, 60);
 }
