@@ -28,6 +28,7 @@ async function analyze(userRequest, snapshot, tab) {
   const url = tab.url ?? '';
   let pageType = 'main';
   if (url.includes('/watch')) pageType = 'video';
+  else if (url.includes('/shorts')) pageType = 'shorts';
   else if (url.includes('/@') || url.includes('/channel/') || url.includes('/c/')) pageType = 'channel';
   else if (url.includes('/feed/library')) pageType = 'library';
   else if (url.includes('/results')) pageType = 'search';

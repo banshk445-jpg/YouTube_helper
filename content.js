@@ -292,6 +292,8 @@ function getPageSnapshot() {
       if (cy > 0.82) area = '플레이어';
       else if (cx < 0.14) area = '사이드바';
       else if (cy < 0.1) area = '헤더';
+      // 쇼츠의 좋아요/댓글/공유 버튼처럼 화면 오른쪽 끝에 세로로 붙은 요소들
+      else if (cx > 0.86) area = '우측';
       items.push({ t, area, x: +cx.toFixed(2), y: +cy.toFixed(2) });
     }
   }
@@ -299,12 +301,16 @@ function getPageSnapshot() {
   // 같은 텍스트+영역 조합만 중복 제거 (같은 라벨이 플레이어/사이드바 등
   // 다른 영역에 따로 있으면 서로 다른 버튼이므로 둘 다 남겨야 한다)
   const seenKeys = new Set();
-  return items.filter(e => {
+  const deduped = items.filter(e => {
     const k = e.t.toLowerCase() + '|' + e.area;
     if (seenKeys.has(k)) return false;
     seenKeys.add(k);
     return true;
-  }).slice(0, 60);
+  });
+  if (deduped.length > 60) {
+    console.warn('[ytai] 화면 요소가 60개를 넘어 일부가 AI에게 전달되지 않음:', deduped.length, '개 중 60개만 전송');
+  }
+  return deduped.slice(0, 60);
 }
 
 // ─── Selectors ───────────────────────────────────────────────────────────────
