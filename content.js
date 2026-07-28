@@ -40,13 +40,7 @@ function createHelperPanel() {
           <span class="ytai-slider"></span>
         </label>
       </div>
-      <div class="ytai-autoclick-row">
-        <span class="ytai-autoclick-label">돋보기</span>
-        <label class="ytai-switch">
-          <input type="checkbox" id="ytai-magnifier-chk">
-          <span class="ytai-slider"></span>
-        </label>
-      </div>
+
       <div class="ytai-quick-grid">
         <button class="ytai-quick-btn" data-type="play" data-label="재생">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21"/></svg>
@@ -110,18 +104,6 @@ function createHelperPanel() {
   document.getElementById('ytai-autoclick-chk').addEventListener('change', (e) => {
     _autoClick = e.target.checked;
     chrome.storage.local.set({ autoClick: _autoClick });
-  });
-
-  // 돋보기 토글 초기화
-  chrome.storage.local.get('magnifier', (data) => {
-    if (data.magnifier) {
-      document.getElementById('ytai-magnifier-chk').checked = true;
-      enableMagnifier();
-    }
-  });
-  document.getElementById('ytai-magnifier-chk').addEventListener('change', (e) => {
-    if (e.target.checked) { enableMagnifier(); } else { disableMagnifier(); }
-    chrome.storage.local.set({ magnifier: e.target.checked });
   });
 
   // 퀵액션 버튼
@@ -461,21 +443,6 @@ function getElementCenter(elementType, elementText) {
   return { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) };
 }
 
-function findByText(texts) {
-  for (const text of texts) {
-    const all = document.querySelectorAll('a, button, span, yt-formatted-string, ytd-guide-entry-renderer');
-    for (const el of all) {
-      if (el.textContent.trim() === text) {
-        const rect = el.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          return { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) };
-        }
-      }
-    }
-  }
-  return null;
-}
-
 // ─── Overlay (spotlight + instruction, 멀티스텝 + 실시간 추적) ───────────────
 
 let _steps = [];
@@ -488,23 +455,38 @@ let _targetEl = null;
 let _targetClickFn = null;
 let _autoClick = false;
 let _autoClickTimer = null;
-const LENS_SIZE = 180;
-const LENS_ZOOM = 2.5;
-let _lensScreenshot = null;
-let _lensScrollTimer = null;
 
 function startTracking(elementType, elementText) {
   _trackingElementType = elementType;
   _trackingElementText = elementText;
+
+  // 오버레이 노드와 대상 요소는 한 번만 찾아 잡고 있는다.
+  // 매 프레임 findTargetElement()를 부르면 유튜브 전체 DOM을 초당 60번 훑게 된다.
+  const s = document.querySelector('.ytai-spotlight');
+  const p = document.querySelector('.ytai-pulse');
+  const a = document.querySelector('.ytai-arrow');
+  const l = document.querySelector('.ytai-target-label');
+  let el = findTargetElement(elementType, elementText);
+  let miss = 0;
+
   function tick() {
     if (!_trackingElementType && !_trackingElementText) return;
-    const pos = getElementCenter(_trackingElementType, _trackingElementText);
-    if (pos) {
-      const { x, y } = pos;
-      const s = document.querySelector('.ytai-spotlight');
-      const p = document.querySelector('.ytai-pulse');
-      const a = document.querySelector('.ytai-arrow');
-      const l = document.querySelector('.ytai-target-label');
+    // 잡고 있던 요소가 DOM에서 빠지거나 숨겨졌을 때만 다시 찾는다 (유튜브 SPA 이동 대응)
+    let rect = el?.isConnected ? el.getBoundingClientRect() : null;
+    if (!rect || rect.width === 0 || rect.height === 0) {
+      // 못 찾는 동안 매 프레임 전체 스캔하지 않도록 30프레임(약 0.5초)에 한 번만 재탐색
+      rect = null;
+      if (miss++ % 30 === 0) {
+        el = findTargetElement(_trackingElementType, _trackingElementText);
+        const r = el?.getBoundingClientRect();
+        if (r && r.width > 0 && r.height > 0) rect = r;
+      }
+    } else {
+      miss = 0;
+    }
+    if (rect) {
+      const x = Math.round(rect.left + rect.width / 2);
+      const y = Math.round(rect.top + rect.height / 2);
       if (s) { s.style.left = x + 'px'; s.style.top = y + 'px'; }
       if (p) { p.style.left = x + 'px'; p.style.top = y + 'px'; }
       if (a) { a.style.left = x + 'px'; a.style.top = y + 'px'; }
@@ -571,63 +553,6 @@ function advanceStep() {
   }
 }
 
-// ─── 돋보기 렌즈 ────────────────────────────────────────────────────────────────
-
-function enableMagnifier() {
-  let lens = document.getElementById('ytai-lens');
-  if (!lens) {
-    lens = document.createElement('div');
-    lens.id = 'ytai-lens';
-    document.body.appendChild(lens);
-  }
-  captureAndUpdateLens();
-  document.addEventListener('mousemove', onLensMove);
-  document.addEventListener('scroll', onLensScroll, true);
-}
-
-function disableMagnifier() {
-  const lens = document.getElementById('ytai-lens');
-  if (lens) {
-    lens.style.display = 'none';
-    lens.style.backgroundImage = '';
-  }
-  document.removeEventListener('mousemove', onLensMove);
-  document.removeEventListener('scroll', onLensScroll, true);
-  _lensScreenshot = null;
-}
-
-function captureAndUpdateLens() {
-  chrome.runtime.sendMessage({ type: 'CAPTURE_TAB' }, (response) => {
-    if (chrome.runtime.lastError || !response?.dataUrl) return;
-    _lensScreenshot = response.dataUrl;
-    const lens = document.getElementById('ytai-lens');
-    if (!lens) return;
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-    lens.style.backgroundImage = `url(${_lensScreenshot})`;
-    lens.style.backgroundSize = `${W * LENS_ZOOM}px ${H * LENS_ZOOM}px`;
-  });
-}
-
-function onLensMove(e) {
-  const lens = document.getElementById('ytai-lens');
-  if (!lens || !_lensScreenshot) return;
-  const cx = e.clientX;
-  const cy = e.clientY;
-  const half = LENS_SIZE / 2;
-  lens.style.display = 'block';
-  lens.style.left = (cx - half) + 'px';
-  lens.style.top  = (cy - half) + 'px';
-  lens.style.backgroundPosition =
-    `${half - cx * LENS_ZOOM}px ${half - cy * LENS_ZOOM}px`;
-}
-
-function onLensScroll() {
-  const lens = document.getElementById('ytai-lens');
-  if (lens) lens.style.display = 'none'; // 스크롤 중엔 숨김
-  if (_lensScrollTimer) clearTimeout(_lensScrollTimer);
-  _lensScrollTimer = setTimeout(captureAndUpdateLens, 250);
-}
 
 function cancelAutoClick() {
   if (_autoClickTimer) { clearInterval(_autoClickTimer); _autoClickTimer = null; }

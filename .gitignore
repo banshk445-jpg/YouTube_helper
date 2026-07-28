@@ -1,3 +1,8 @@
 .claude/
 dev-reload.js
 node_modules/
+.DS_Store
+
+# Worker — API 키가 들어가는 파일들
+.dev.vars
+.wrangler/

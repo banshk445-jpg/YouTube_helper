@@ -1,0 +1,23 @@
+name = "youtubehelper"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+[vars]
+# 확장 프로그램 ID. 로컬 테스트 ID와 웹스토어 ID가 다르므로 쉼표로 둘 다 넣어도 된다.
+# 로그로 확인한 실제 값. 웹스토어에 게시하면 ID가 또 바뀌므로 그때 쉼표로 추가할 것.
+ALLOWED_ORIGINS = "chrome-extension://nkblggfpnfccdpanobgkhgolllgojjap"
+ENFORCE_ORIGIN = "true"
+
+# 버전별 프리뷰 URL(<version>-youtubehelper.workers.dev)도 공개 엔드포인트가 되므로 끈다.
+preview_urls = false
+
+# IP당 60초에 10회. workers.dev 도메인에는 Cloudflare WAF 룰이 안 걸리므로
+# Worker 내장 rate limit 바인딩을 쓴다. period는 10 또는 60만 허용된다.
+#
+# ⚠️ 이 바인딩의 카운터는 위치(isolate)별이라 집계가 느슨하다. 실측에서 5회/10초 한도에
+# 20회를 쏘니 2회만 429였다. 대량 남용을 늦추는 과속방지턱이지 차단벽이 아니다.
+# 실질 상한은 Anthropic 콘솔의 월 spend limit이다.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
