@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>유튜브 AI 도우미</title>
+  <title id="popup-title">YouTube AI Helper</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -146,39 +146,40 @@
       </svg>
     </div>
     <div class="header-text">
-      <h1>유튜브 AI 도우미</h1>
-      <p>AI가 버튼을 직접 가리켜 드려요</p>
+      <h1 id="header-title">YouTube AI Helper</h1>
+      <p id="header-subtitle">AI points at the button for you</p>
     </div>
   </div>
 
   <div class="status-badge">
     <div class="status-dot"></div>
-    유튜브에서 사용 가능
+    <span id="status-badge-text">Works on YouTube</span>
   </div>
 
   <div class="steps">
-    <div class="steps-title">사용 방법</div>
+    <div class="steps-title" id="steps-title">How to use</div>
     <div class="step">
       <div class="step-num">1</div>
-      <div class="step-text">유튜브에서 <strong>"도움받기"</strong> 버튼을 클릭하세요</div>
+      <div class="step-text" id="step-1"></div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">원하는 것을 <strong>버튼으로 선택</strong>하거나 <strong>말하거나 입력</strong>하세요</div>
+      <div class="step-text" id="step-2"></div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
-      <div class="step-text">AI가 화면에서 <strong>해당 버튼을 직접 가리켜</strong> 드립니다</div>
+      <div class="step-text" id="step-3"></div>
     </div>
   </div>
 
   <div class="features">
-    <div class="feature"><span class="feat-icon">⚡</span>퀵액션 9개</div>
-    <div class="feature"><span class="feat-icon">🎙</span>음성 입력</div>
-    <div class="feature"><span class="feat-icon">📋</span>단계별 안내</div>
-    <div class="feature"><span class="feat-icon">👆</span>자동 클릭</div>
+    <div class="feature"><span class="feat-icon">⚡</span><span id="feature-1"></span></div>
+    <div class="feature"><span class="feat-icon">🎙</span><span id="feature-2"></span></div>
+    <div class="feature"><span class="feat-icon">📋</span><span id="feature-3"></span></div>
+    <div class="feature"><span class="feat-icon">👆</span><span id="feature-4"></span></div>
   </div>
 
-  <div class="footer">별도 설정 없이 바로 사용 가능합니다</div>
+  <div class="footer" id="footer-text"></div>
+  <script src="popup.js"></script>
 </body>
 </html>

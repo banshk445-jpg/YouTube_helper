@@ -12,7 +12,7 @@ chrome.runtime.onConnect.addListener((port) => {
     console.log('[ytai] 요청 수신:', message.userRequest, '스냅샷:', (message.pageSnapshot ?? []).length, '개');
 
     try {
-      const result = await analyze(message.userRequest, message.pageSnapshot ?? [], port.sender.tab);
+      const result = await analyze(message.userRequest, message.pageSnapshot ?? [], message.lang, port.sender.tab);
       console.log('[ytai] 완료:', result);
       port.postMessage({ type: 'ANALYSIS_RESULT', result });
     } catch (e) {
@@ -22,8 +22,8 @@ chrome.runtime.onConnect.addListener((port) => {
   });
 });
 
-async function analyze(userRequest, snapshot, tab) {
-  if (!tab) throw new Error('탭 정보 없음');
+async function analyze(userRequest, snapshot, lang, tab) {
+  if (!tab) throw new Error(chrome.i18n.getMessage('noTabError'));
 
   const url = tab.url ?? '';
   let pageType = 'main';
@@ -37,29 +37,29 @@ async function analyze(userRequest, snapshot, tab) {
   const timer = setTimeout(() => controller.abort(), 20000);
 
   try {
-    const result = await callClaude(userRequest, pageType, snapshot, controller.signal);
+    const result = await callClaude(userRequest, pageType, snapshot, lang, controller.signal);
     clearTimeout(timer);
     return result;
   } catch (e) {
     clearTimeout(timer);
-    if (e.name === 'AbortError') throw new Error('시간 초과. 다시 시도해주세요.');
+    if (e.name === 'AbortError') throw new Error(chrome.i18n.getMessage('timeoutError'));
     throw e;
   }
 }
 
 // 프롬프트·모델·토큰 한도는 Worker(worker/src/index.js)에 있다.
 // 여기서 보내면 클라이언트가 조작할 수 있어서 프록시가 공개 API가 되어버린다.
-async function callClaude(userRequest, pageType, snapshot, signal) {
+async function callClaude(userRequest, pageType, snapshot, lang, signal) {
   const response = await fetch(WORKER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-YTAI-Lang': lang },
     signal,
-    body: JSON.stringify({ userRequest, pageType, snapshot })
+    body: JSON.stringify({ userRequest, pageType, snapshot, lang })
   });
 
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(data?.error ?? `AI 서버 오류 (${response.status})`);
-  if (!data?.steps?.length) throw new Error('응답을 이해하지 못했어요. 다시 시도해주세요.');
+  if (!response.ok) throw new Error(data?.error ?? `${chrome.i18n.getMessage('serverErrorPrefix')} (${response.status})`);
+  if (!data?.steps?.length) throw new Error(chrome.i18n.getMessage('noStepsError'));
 
   console.log('[ytai] 단계:', data.steps.length, '개');
   return { steps: data.steps };

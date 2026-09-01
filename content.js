@@ -1,3 +1,10 @@
+const t = (key) => chrome.i18n.getMessage(key);
+const YTAI_LANG = chrome.i18n.getUILanguage().startsWith('ko') ? 'ko' : 'en';
+// 스냅샷의 영역 라벨도 프롬프트에 그대로 들어가므로 UI 언어에 맞춘다.
+const AREA = YTAI_LANG === 'en'
+  ? { main: 'main', player: 'player', sidebar: 'sidebar', header: 'header', right: 'right' }
+  : { main: '메인', player: '플레이어', sidebar: '사이드바', header: '헤더', right: '우측' };
+
 // Prevent double injection
 if (window.__ytAiHelperLoaded) {
   // already loaded
@@ -17,7 +24,7 @@ function initHelper() {
 function createFloatingButton() {
   const btn = document.createElement('div');
   btn.id = 'ytai-btn';
-  btn.innerHTML = `<span class="ytai-btn-icon"></span><span class="ytai-btn-label">도움받기</span>`;
+  btn.innerHTML = `<span class="ytai-btn-icon"></span><span class="ytai-btn-label">${t('floatingBtnLabel')}</span>`;
   btn.addEventListener('click', togglePanel);
   document.body.appendChild(btn);
 }
@@ -29,12 +36,12 @@ function createHelperPanel() {
   panel.id = 'ytai-panel';
   panel.innerHTML = `
     <div class="ytai-panel-header">
-      <span>무엇을 도와드릴까요?</span>
+      <span>${t('panelHeaderTitle')}</span>
       <button class="ytai-close-btn" id="ytai-panel-close">✕</button>
     </div>
     <div class="ytai-panel-body" id="ytai-panel-body">
       <div class="ytai-autoclick-row">
-        <span class="ytai-autoclick-label">자동 클릭</span>
+        <span class="ytai-autoclick-label">${t('autoClickLabel')}</span>
         <label class="ytai-switch">
           <input type="checkbox" id="ytai-autoclick-chk">
           <span class="ytai-slider"></span>
@@ -42,55 +49,55 @@ function createHelperPanel() {
       </div>
 
       <div class="ytai-quick-grid">
-        <button class="ytai-quick-btn" data-type="play" data-label="재생">
+        <button class="ytai-quick-btn" data-type="play" data-label="${t('quickPlay')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21"/></svg>
-          <span>재생</span>
+          <span>${t('quickPlay')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="volume" data-label="볼륨">
+        <button class="ytai-quick-btn" data-type="volume" data-label="${t('quickVolume')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M19.07,4.93a10,10,0,0,1,0,14.14"/><path d="M15.54,8.46a5,5,0,0,1,0,7.07"/></svg>
-          <span>볼륨</span>
+          <span>${t('quickVolume')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="subtitles" data-label="자막">
+        <button class="ytai-quick-btn" data-type="subtitles" data-label="${t('quickSubtitles')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="7" y1="11" x2="11" y2="11"/><line x1="13" y1="11" x2="17" y2="11"/><line x1="7" y1="15" x2="10" y2="15"/></svg>
-          <span>자막</span>
+          <span>${t('quickSubtitles')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="fullscreen" data-label="전체화면">
+        <button class="ytai-quick-btn" data-type="fullscreen" data-label="${t('quickFullscreen')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,3 21,3 21,9"/><polyline points="9,21 3,21 3,15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-          <span>전체화면</span>
+          <span>${t('quickFullscreen')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="next_video" data-label="다음 영상">
+        <button class="ytai-quick-btn" data-type="next_video" data-label="${t('quickNext')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,4 15,12 5,20"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-          <span>다음 영상</span>
+          <span>${t('quickNext')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="like" data-label="좋아요">
+        <button class="ytai-quick-btn" data-type="like" data-label="${t('quickLike')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-          <span>좋아요</span>
+          <span>${t('quickLike')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="save" data-label="저장">
+        <button class="ytai-quick-btn" data-type="save" data-label="${t('quickSave')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-          <span>저장</span>
+          <span>${t('quickSave')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="search" data-label="검색">
+        <button class="ytai-quick-btn" data-type="search" data-label="${t('quickSearch')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span>검색</span>
+          <span>${t('quickSearch')}</span>
         </button>
-        <button class="ytai-quick-btn" data-type="home" data-label="홈으로">
+        <button class="ytai-quick-btn" data-type="home" data-label="${t('quickHome')}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-          <span>홈으로</span>
+          <span>${t('quickHome')}</span>
         </button>
       </div>
-      <div class="ytai-or">직접 말하거나 입력하기</div>
+      <div class="ytai-or">${t('orSpeakOrType')}</div>
       <button id="ytai-voice-btn" class="ytai-voice-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        <span>눌러서 말하기</span>
+        <span>${t('voiceBtnLabel')}</span>
       </button>
       <div id="ytai-voice-status" class="ytai-voice-status"></div>
-      <div class="ytai-or">또는</div>
-      <textarea id="ytai-input" placeholder="예) 볼륨을 높이고 싶어요&#10;예) 영상을 일시정지하고 싶어요" rows="3"></textarea>
-      <button id="ytai-send-btn" class="ytai-send-btn">AI에게 물어보기 →</button>
+      <div class="ytai-or">${t('orText')}</div>
+      <textarea id="ytai-input" placeholder="${t('inputPlaceholder')}" rows="3"></textarea>
+      <button id="ytai-send-btn" class="ytai-send-btn">${t('sendBtnLabel')}</button>
       <div id="ytai-loading" class="ytai-loading" style="display:none">
         <div class="ytai-spinner"></div>
-        <span>AI가 화면을 분석 중입니다...</span>
+        <span>${t('loadingText')}</span>
       </div>
     </div>
   `;
@@ -151,7 +158,7 @@ let recognition = null;
 function startVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    showErrorToast('이 브라우저는 음성 인식을 지원하지 않습니다.');
+    showErrorToast(t('voiceUnsupported'));
     return;
   }
 
@@ -161,7 +168,7 @@ function startVoice() {
   }
 
   recognition = new SR();
-  recognition.lang = 'ko-KR';
+  recognition.lang = YTAI_LANG === 'ko' ? 'ko-KR' : 'en-US';
   recognition.continuous = false;
   recognition.interimResults = true;
 
@@ -169,8 +176,8 @@ function startVoice() {
   const status = document.getElementById('ytai-voice-status');
 
   btn.classList.add('ytai-recording');
-  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>듣고 있어요...</span>';
-  status.textContent = '말씀해 주세요!';
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>${t('voiceListening')}</span>`;
+  status.textContent = t('voiceSpeakPrompt');
 
   recognition.onresult = (e) => {
     let transcript = '';
@@ -183,7 +190,7 @@ function startVoice() {
 
   recognition.onend = () => {
     btn.classList.remove('ytai-recording');
-    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span>눌러서 말하기</span>';
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span>${t('voiceBtnLabel')}</span>`;
     recognition = null;
     const val = document.getElementById('ytai-input').value.trim();
     if (val) setTimeout(() => submitRequest(val), 400);
@@ -191,8 +198,8 @@ function startVoice() {
 
   recognition.onerror = () => {
     btn.classList.remove('ytai-recording');
-    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span>눌러서 말하기</span>';
-    status.textContent = '인식에 실패했습니다. 다시 시도해주세요.';
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span>${t('voiceBtnLabel')}</span>`;
+    status.textContent = t('voiceError');
     recognition = null;
   };
 
@@ -215,7 +222,7 @@ function submitRequest(userRequest) {
     if (!responded) {
       port.disconnect();
       resetPanel();
-      showErrorToast('시간 초과. 다시 시도해주세요.');
+      showErrorToast(t('timeoutError'));
     }
   }, 35000);
 
@@ -236,11 +243,11 @@ function submitRequest(userRequest) {
     clearTimeout(timeout);
     if (!responded) {
       resetPanel();
-      showErrorToast('연결 오류: 유튜브 탭을 새로고침 후 다시 시도해주세요.');
+      showErrorToast(t('connError'));
     }
   });
 
-  port.postMessage({ type: 'ANALYZE_SCREEN', userRequest, pageSnapshot });
+  port.postMessage({ type: 'ANALYZE_SCREEN', userRequest, pageSnapshot, lang: YTAI_LANG });
 }
 
 // ─── Page snapshot (DOM → Claude용 요소 목록) ──────────────────────────────────
@@ -288,12 +295,12 @@ function getPageSnapshot() {
       if (!t) continue;
       const cx = (rect.left + rect.width / 2) / window.innerWidth;
       const cy = (rect.top + rect.height / 2) / window.innerHeight;
-      let area = '메인';
-      if (cy > 0.82) area = '플레이어';
-      else if (cx < 0.14) area = '사이드바';
-      else if (cy < 0.1) area = '헤더';
+      let area = AREA.main;
+      if (cy > 0.82) area = AREA.player;
+      else if (cx < 0.14) area = AREA.sidebar;
+      else if (cy < 0.1) area = AREA.header;
       // 쇼츠의 좋아요/댓글/공유 버튼처럼 화면 오른쪽 끝에 세로로 붙은 요소들
-      else if (cx > 0.86) area = '우측';
+      else if (cx > 0.86) area = AREA.right;
       items.push({ t, area, x: +cx.toFixed(2), y: +cy.toFixed(2) });
     }
   }
@@ -328,16 +335,18 @@ const ELEMENT_SELECTORS = {
   like:          'button[aria-label*="좋아요 표시"], like-button-view-model button, ytd-toggle-button-renderer[is-icon-button] button[aria-label*="좋아요"]',
   dislike:       'button[aria-label*="싫어요 표시"], dislike-button-view-model button, ytd-toggle-button-renderer[is-icon-button] button[aria-label*="싫어요"]',
   subscribe:     'yt-subscribe-button-view-model button, ytd-subscribe-button-renderer button',
-  playlists_tab: 'yt-tab-shape[tab-title="재생목록"], tp-yt-paper-tab[aria-label="재생목록"], [tab-identifier="재생목록"]',
+  playlists_tab: 'yt-tab-shape[tab-title="재생목록"], tp-yt-paper-tab[aria-label="재생목록"], [tab-identifier="재생목록"], yt-tab-shape[tab-title="Playlists"], tp-yt-paper-tab[aria-label="Playlists"], [tab-identifier="Playlists"]',
   save:          [
     'button[aria-label*="저장"]',
     'yt-button-shape button[aria-label*="저장"]',
     'ytd-button-renderer button[aria-label*="저장"]',
     'ytd-menu-service-item-renderer[aria-label*="저장"]',
     '.ytd-menu-renderer button[aria-label*="저장"]',
+    'button[aria-label*="Save"]',
+    'yt-button-shape button[aria-label*="Save"]',
   ].join(', '),
-  share:         'button[aria-label*="공유"], yt-button-shape button[aria-label*="공유"]',
-  more_actions:  'button[aria-label*="더보기"], yt-button-shape button[aria-label*="더보기"], button[aria-label*="작업 더보기"]',
+  share:         'button[aria-label*="공유"], yt-button-shape button[aria-label*="공유"], button[aria-label*="Share"], yt-button-shape button[aria-label*="Share"]',
+  more_actions:  'button[aria-label*="더보기"], yt-button-shape button[aria-label*="더보기"], button[aria-label*="작업 더보기"], button[aria-label*="More actions"], yt-button-shape button[aria-label*="More actions"]',
   home:          'ytd-guide-entry-renderer a[href="/"], ytd-mini-guide-entry-renderer a[href="/"], a[href="/"][title]',
   subscriptions: 'ytd-guide-entry-renderer a[href="/feed/subscriptions"], ytd-mini-guide-entry-renderer a[href="/feed/subscriptions"]',
   library:       'ytd-guide-entry-renderer a[href="/feed/library"], ytd-mini-guide-entry-renderer a[href="/feed/library"]',
@@ -351,18 +360,18 @@ const TEXT_FALLBACKS = {
   subscriptions: ['구독', 'Subscriptions'],
   history:       ['기록', 'History'],
   shorts:        ['Shorts'],
-  search:        ['검색'],
-  like:          ['좋아요'],
-  subscribe:      ['구독'],
-  playlists_tab:  ['재생목록'],
-  save:           ['저장'],
-  share:          ['공유'],
+  search:        ['검색', 'Search'],
+  like:          ['좋아요', 'Like'],
+  subscribe:      ['구독', 'Subscribe'],
+  playlists_tab:  ['재생목록', 'Playlists'],
+  save:           ['저장', 'Save'],
+  share:          ['공유', 'Share'],
 };
 
 // ─── Element finders ─────────────────────────────────────────────────────────
 
-// 한국어 YouTube 동의어 맵 (단축키 제거 후 원래 단어 → 검색어)
-const KR_SYNONYMS = {
+// YouTube 동의어 맵 (단축키 제거 후 원래 단어 → 검색어). 한/영 병기.
+const SYNONYMS = {
   '볼륨': ['음소거', '음소거 해제', '볼륨', 'mute', 'unmute', 'volume'],
   '음소거': ['음소거', '음소거 해제', '볼륨', 'mute', 'unmute', 'volume'],
   '재생': ['재생', '일시중지', '일시정지', 'play', 'pause'],
@@ -375,6 +384,18 @@ const KR_SYNONYMS = {
   '공유': ['공유', 'share'],
   '좋아요': ['좋아요', '좋아요 표시', 'like'],
   '구독': ['구독', 'subscribe'],
+  'volume': ['mute', 'unmute', 'volume', '볼륨', '음소거'],
+  'mute': ['mute', 'unmute', 'volume', '볼륨', '음소거'],
+  'unmute': ['mute', 'unmute', 'volume', '볼륨', '음소거'],
+  'play': ['play', 'pause', '재생', '일시정지'],
+  'pause': ['pause', 'play', '일시정지', '재생'],
+  'subtitles': ['subtitles', 'captions', 'cc', '자막'],
+  'captions': ['subtitles', 'captions', 'cc', '자막'],
+  'fullscreen': ['fullscreen', 'full screen', '전체화면'],
+  'save': ['save', 'save to playlist', '저장'],
+  'share': ['share', '공유'],
+  'like': ['like', '좋아요'],
+  'subscribe': ['subscribe', '구독'],
 };
 
 function findElementByTextContent(text) {
@@ -386,7 +407,7 @@ function findElementByTextContent(text) {
 
   // 검색할 키워드 목록 (동의어 포함)
   const keywords = [norm];
-  for (const [key, syns] of Object.entries(KR_SYNONYMS)) {
+  for (const [key, syns] of Object.entries(SYNONYMS)) {
     if (norm.includes(key) || key.includes(norm)) {
       keywords.push(...syns.map(s => s.toLowerCase()));
     }
@@ -569,7 +590,7 @@ function startAutoClickCountdown(elementType, elementText) {
   let secs = 2;
   const updateBtn = () => {
     const btn = document.getElementById('ytai-instr-ok');
-    if (btn) btn.textContent = `${secs}초 후 자동 클릭`;
+    if (btn) btn.textContent = t('autoClickCountdown').replace('{n}', secs);
   };
   updateBtn();
   _autoClickTimer = setInterval(() => {
@@ -608,12 +629,12 @@ function quickAction(elementType, label) {
       const input = document.querySelector('input#search');
       if (input) { input.focus(); input.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     }
-    showErrorToast(`'${label}' 버튼을 이 화면에서 찾을 수 없어요.`);
+    showErrorToast(t('notFoundToast').replace('{label}', label));
     return;
   }
   showOverlay({
     steps: [{
-      instruction: `${label} 버튼입니다. 클릭하세요.`,
+      instruction: t('quickActionInstruction').replace('{label}', label),
       element_type: elementType,
       element_text: null,
       target_label: label,
@@ -623,7 +644,7 @@ function quickAction(elementType, label) {
 
 function showOverlay(result) {
   if (!result?.steps?.length) {
-    showErrorToast('응답 형식 오류. 다시 시도해주세요.');
+    showErrorToast(t('responseFormatError'));
     resetPanel();
     return;
   }
@@ -682,11 +703,11 @@ function showStep(index) {
     ? `<div class="ytai-step-indicator">${index + 1} / ${total}</div>`
     : '';
 
-  const btnLabel = isLast ? '확인' : (_autoClick && (eType || eText) ? '2초 후 자동 클릭' : ((eType || eText) ? '건너뛰기' : '다음 →'));
+  const btnLabel = isLast ? t('confirmBtn') : (_autoClick && (eType || eText) ? t('autoClickCountdown').replace('{n}', 2) : ((eType || eText) ? t('skipBtn') : t('nextBtn')));
 
   box.innerHTML = `
     ${stepIndicator}
-    <div class="ytai-instr-text">${escapeHtml(step.instruction ?? '안내를 불러오지 못했어요.')}</div>
+    <div class="ytai-instr-text">${escapeHtml(step.instruction ?? t('fallbackInstruction'))}</div>
     <button id="ytai-instr-ok">${btnLabel}</button>
   `;
   document.body.appendChild(box);

@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "유튜브 AI 도우미",
-  "version": "1.0.1",
-  "description": "AI가 유튜브 버튼을 직접 가리켜 드려요. 노인·초보자도 쉽게 유튜브를 이용할 수 있습니다.",
+  "name": "__MSG_extName__",
+  "version": "1.1.0",
+  "default_locale": "ko",
+  "description": "__MSG_extDescription__",
   "icons": {
     "16":  "icons/icon16.png",
     "48":  "icons/icon48.png",
@@ -28,7 +29,7 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "유튜브 AI 도우미",
+    "default_title": "__MSG_extName__",
     "default_icon": {
       "16":  "icons/icon16.png",
       "48":  "icons/icon48.png",
